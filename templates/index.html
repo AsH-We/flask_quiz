@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="quiz-container">
+        <h2>{{ question['question'] }}</h2>
+        <div id="options">
+            {% for option in question['options'] %}
+                <button class="option" data-index="{{ loop.index0 }}">{{ option }}</button>
+            {% endfor %}
+        </div>
+        <button id="next-btn" class="next-btn">Next</button>
+    </div>
+
+    <script>
+        let currentAnswerIndex = {{ question['answer'] }};
+        const options = document.querySelectorAll('.option');
+        const nextBtn = document.getElementById('next-btn');
+
+        // Highlight correct/incorrect answers when clicked
+        options.forEach(option => {
+            option.addEventListener('click', function() {
+                // Remove previous highlight classes
+                options.forEach(opt => opt.classList.remove('correct', 'incorrect'));
+
+                // Add the appropriate class to the clicked option
+                if (parseInt(option.getAttribute('data-index')) === currentAnswerIndex) {
+                    option.classList.add('correct');
+                } else {
+                    option.classList.add('incorrect');
+                }
+            });
+        });
+
+        // Handle the "Next" button click
+        nextBtn.addEventListener('click', function() {
+            fetch('/next', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Update the question and options
+                document.querySelector('h2').textContent = data.question.question;
+                options.forEach((opt, idx) => {
+                    opt.textContent = data.question.options[idx];
+                    opt.classList.remove('correct', 'incorrect');
+                });
+                currentAnswerIndex = data.question.answer;
+            });
+        });
+    </script>
+</body>
+</html>
